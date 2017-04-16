@@ -26,6 +26,10 @@
 #include <linux/earlysuspend.h>
 #endif
 
+#ifdef CONFIG_POWERSUSPEND
+#include <linux/powersuspend.h>
+#endif
+
 #include "mdss_dsi.h"
 #include "mdss_samsung_oled_cmd_fhd_fa2_panel.h"
 #include "mdss_fb.h"
@@ -526,7 +530,7 @@ int mdss_dsi_panel_partial_update(struct mdss_panel_data *pdata)
 	ctrl = container_of(pdata, struct mdss_dsi_ctrl_pdata,
 				panel_data);
 	mipi  = &pdata->panel_info.mipi;
-	pr_debug("%s: ctrl=%p ndx=%d\n", __func__, ctrl, ctrl->ndx);
+	pr_debug("%s: ctrl=%pK ndx=%d\n", __func__, ctrl, ctrl->ndx);
 
 	caset[1] = (((pdata->panel_info.roi_x) & 0xFF00) >> 8);
 	caset[2] = (((pdata->panel_info.roi_x) & 0xFF));
@@ -2121,6 +2125,10 @@ static int mdss_dsi_panel_on(struct mdss_panel_data *pdata)
 		return -EINVAL;
 	}
 
+#ifdef CONFIG_POWERSUSPEND
+    set_power_suspend_state_panel_hook(POWER_SUSPEND_INACTIVE);
+#endif
+
 	pr_info("%s : ++\n", __func__);
 
 	ctrl = container_of(pdata, struct mdss_dsi_ctrl_pdata,
@@ -2129,7 +2137,7 @@ static int mdss_dsi_panel_on(struct mdss_panel_data *pdata)
 	msd.ctrl_pdata = ctrl;
 
 	pr_debug("mdss_dsi_panel_on DSI_MODE = %d ++\n",msd.pdata->panel_info.mipi.mode);
-	pr_info("%s: ctrl=%p ndx=%d\n", __func__, ctrl, ctrl->ndx);
+	pr_info("%s: ctrl=%pk ndx=%d\n", __func__, ctrl, ctrl->ndx);
 
 	if (mdss_dsi_sync_wait_enable(ctrl)) {
 		if (ctrl->ndx == DSI_CTRL_0) {
@@ -2264,7 +2272,7 @@ static int mdss_dsi_panel_off(struct mdss_panel_data *pdata)
 	msd.dstat.on = 0;
 	msd.mfd->resume_state = MIPI_SUSPEND_STATE;
 
-	pr_info("%s: ctrl=%p ndx=%d\n", __func__, ctrl, ctrl->ndx);
+	pr_info("%s: ctrl=%pk ndx=%d\n", __func__, ctrl, ctrl->ndx);
 
 	if (mdss_dsi_sync_wait_enable(ctrl)) {
 		if (ctrl->ndx == DSI_CTRL_0) {
@@ -2281,6 +2289,9 @@ static int mdss_dsi_panel_off(struct mdss_panel_data *pdata)
 
 end:
 	pr_info("%s : --\n",__func__);
+#ifdef CONFIG_POWERSUSPEND
+    set_power_suspend_state_panel_hook(POWER_SUSPEND_ACTIVE);
+#endif
 	return 0;
 }
 

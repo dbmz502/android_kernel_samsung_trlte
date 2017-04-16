@@ -1242,6 +1242,12 @@ config MSM_RPM_LOG
 	  information about RPM operation. The driver outputs the messages
 	  via a debugfs node.
 
+config CPU_VOLTAGE_CONTROL
+	bool "Userspace CPU Voltage Control"
+	default y
+	help
+	  This enables userspace CPU Voltage Control.
+
 config MSM_RPM_STATS_LOG
 	tristate "MSM Resource Power Manager Stat Driver"
 	depends on DEBUG_FS

@@ -24,6 +24,10 @@
 #include <linux/log2.h>
 #include <linux/qpnp/power-on.h>
 
+#ifdef CONFIG_WAKE_GESTURES
+#include <linux/wake_gestures.h>
+#endif
+
 #if defined(CONFIG_SEC_DEBUG)
 #include <mach/sec_debug.h>
 #endif
@@ -1249,6 +1253,12 @@ static int qpnp_pon_config_init(struct qpnp_pon *pon)
 					pmic_wd_bark_irq);
 			goto free_input_dev;
 		}
+#ifdef CONFIG_WAKE_GESTURES
+		else {
+			 wg_setdev(pon->pon_input);
+			 printk(KERN_INFO "[sweep2wake]: set device %s\n", pon->pon_input->name);
+		}
+#endif
 	}
 
 	/* register the input device */

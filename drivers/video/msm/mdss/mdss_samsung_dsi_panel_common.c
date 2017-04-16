@@ -26,9 +26,18 @@
 #include <linux/earlysuspend.h>
 #endif
 
+#ifdef CONFIG_POWERSUSPEND
+#include <linux/powersuspend.h>
+#endif
+
 #include "mdss_dsi.h"
 #include "mdss_samsung_dsi_panel_common.h"
 #include "mdss_fb.h"
+
+
+#ifdef CONFIG_TOUCHSCREEN_DOUBLETAP2WAKE
+#include <linux/input/doubletap2wake.h>
+#endif
 
 #if defined(CONFIG_MDNIE_LITE_TUNING)
 #include "mdnie_lite_tuning.h"
@@ -565,6 +574,7 @@ void mdss_dsi_samsung_panel_reset(struct mdss_panel_data *pdata, int enable)
 		wmb();
 
 	} else {
+		if (!dt2w_suspended)
 		gpio_set_value((ctrl_pdata->rst_gpio), 0);
 
 	}
@@ -2358,6 +2368,10 @@ static int mdss_dsi_panel_on(struct mdss_panel_data *pdata)
 		return -EINVAL;
 	}
 
+#ifdef CONFIG_POWERSUSPEND
+    set_power_suspend_state_panel_hook(POWER_SUSPEND_INACTIVE);
+#endif
+
 	if (unlikely(!alpm_data))
 		alpm_data = &pdata->alpm_data;
 
@@ -2370,7 +2384,7 @@ static int mdss_dsi_panel_on(struct mdss_panel_data *pdata)
 	msd.ctrl_pdata = ctrl;
 
 	pr_debug("mdss_dsi_panel_on DSI_MODE = %d ++\n",msd.pdata->panel_info.mipi.mode);
-	pr_info("%s: ctrl=%p ndx=%d\n", __func__, ctrl, ctrl->ndx);
+	pr_info("%s: ctrl=%pK ndx=%d\n", __func__, ctrl, ctrl->ndx);
 
 	if (mdss_dsi_sync_wait_enable(ctrl)) {
 		if (ctrl->ndx == DSI_CTRL_0) {
@@ -2566,7 +2580,7 @@ static int mdss_dsi_panel_off(struct mdss_panel_data *pdata)
 	msd.dstat.on = 0;
 	msd.mfd->resume_state = MIPI_SUSPEND_STATE;
 
-	pr_info("%s: ctrl=%p ndx=%d\n", __func__, ctrl, ctrl->ndx);
+	pr_info("%s: ctrl=%pK ndx=%d\n", __func__, ctrl, ctrl->ndx);
 
 	if (mdss_dsi_sync_wait_enable(ctrl)) {
 		if (ctrl->ndx == DSI_CTRL_0) {
@@ -2584,6 +2598,9 @@ static int mdss_dsi_panel_off(struct mdss_panel_data *pdata)
 end:
 	pinfo->blank_state = MDSS_PANEL_BLANK_BLANK;
 	pr_info("%s : --\n",__func__);
+#ifdef CONFIG_POWERSUSPEND
+    set_power_suspend_state_panel_hook(POWER_SUSPEND_ACTIVE);
+#endif
 	return 0;
 }
 
@@ -2602,7 +2619,7 @@ static int mdss_dsi_panel_low_power_config(struct mdss_panel_data *pdata,
 	ctrl = container_of(pdata, struct mdss_dsi_ctrl_pdata,
 				panel_data);
 
-	pr_debug("%s: ctrl=%p ndx=%d enable=%d\n", __func__, ctrl, ctrl->ndx,
+	pr_debug("%s: ctrl=%pK ndx=%d enable=%d\n", __func__, ctrl, ctrl->ndx,
 		enable);
 
 	/* Any panel specific low power commands/config */

@@ -21,6 +21,9 @@
 #include <linux/leds.h>
 #include <linux/qpnp/pwm.h>
 #include <linux/err.h>
+#ifdef CONFIG_POWERSUSPEND
+#include <linux/powersuspend.h>
+#endif
 
 #include "mdss_dsi.h"
 
@@ -677,11 +680,15 @@ static int mdss_dsi_panel_on(struct mdss_panel_data *pdata)
 		return -EINVAL;
 	}
 
+#ifdef CONFIG_POWERSUSPEND
+    set_power_suspend_state_panel_hook(POWER_SUSPEND_INACTIVE);
+#endif
+
 	pinfo = &pdata->panel_info;
 	ctrl = container_of(pdata, struct mdss_dsi_ctrl_pdata,
 				panel_data);
 
-	pr_info("%s: ctrl=%p ndx=%d\n", __func__, ctrl, ctrl->ndx);
+	pr_info("%s: ctrl=%pK ndx=%d\n", __func__, ctrl, ctrl->ndx);
 
 #if defined(CONFIG_FB_MSM_MDSS_SAMSUNG)
 	if (ctrl->ndx == DSI_CTRL_0)
@@ -758,7 +765,7 @@ static int mdss_dsi_panel_off(struct mdss_panel_data *pdata)
 	ctrl = container_of(pdata, struct mdss_dsi_ctrl_pdata,
 				panel_data);
 
-	pr_info("%s: ctrl=%p ndx=%d\n", __func__, ctrl, ctrl->ndx);
+	pr_info("%s: ctrl=%pK ndx=%d\n", __func__, ctrl, ctrl->ndx);
 
 #if defined(CONFIG_FB_MSM_MDSS_SAMSUNG)
 	if (pinfo->esd_check_enabled) {
@@ -794,6 +801,9 @@ static int mdss_dsi_panel_off(struct mdss_panel_data *pdata)
 end:
 	pinfo->blank_state = MDSS_PANEL_BLANK_BLANK;
 	pr_debug("%s:-\n", __func__);
+#ifdef CONFIG_POWERSUSPEND
+    set_power_suspend_state_panel_hook(POWER_SUSPEND_ACTIVE);
+#endif
 	return 0;
 }
 
@@ -812,7 +822,7 @@ static int mdss_dsi_panel_low_power_config(struct mdss_panel_data *pdata,
 	ctrl = container_of(pdata, struct mdss_dsi_ctrl_pdata,
 				panel_data);
 
-	pr_debug("%s: ctrl=%p ndx=%d enable=%d\n", __func__, ctrl, ctrl->ndx,
+	pr_debug("%s: ctrl=%pK ndx=%d enable=%d\n", __func__, ctrl, ctrl->ndx,
 		enable);
 
 	/* Any panel specific low power commands/config */
